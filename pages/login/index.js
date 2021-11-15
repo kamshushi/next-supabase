@@ -51,7 +51,7 @@ const Index = () => {
               src="https://app.supabase.io/img/supabase-light.svg"
               width="96"
             />
-            <Typography.Title level={3}>
+            <Typography.Title level={3} className="mt-7 mb-7 font-bold">
               Welcome to Supabase Auth
             </Typography.Title>
           </div>
@@ -61,6 +61,7 @@ const Index = () => {
             view={authView}
             socialLayout="horizontal"
             socialButtonSize="xlarge"
+            socialColors={true}
           />
         </Space>
       );

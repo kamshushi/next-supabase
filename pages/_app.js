@@ -1,4 +1,6 @@
 import '../styles/globals.css';
+import 'tailwindcss/tailwind.css';
+
 import { supabase } from '../utils/supabaseClient';
 import { Auth } from '@supabase/ui';
 
