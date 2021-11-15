@@ -1,7 +1,13 @@
-import '../styles/globals.css'
+import '../styles/globals.css';
+import { supabase } from '../utils/supabaseClient';
+import { Auth } from '@supabase/ui';
 
 function MyApp({ Component, pageProps }) {
-  return <Component {...pageProps} />
+  return (
+    <Auth.UserContextProvider supabaseClient={supabase}>
+      <Component {...pageProps} />
+    </Auth.UserContextProvider>
+  );
 }
 
-export default MyApp
+export default MyApp;
