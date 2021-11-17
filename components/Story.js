@@ -17,16 +17,12 @@ const Story = ({ story }) => {
     created_at,
   } = story;
 
-  const fullText =
-    fulltext ||
-    'Lorem ipsum dolor sit amet, consectetur adipiscing elit. Cras et condimentum sem, luctus convallis nisi. Aenean maximus lectus arcu, at pulvinar nibh condimentum eget. Sed a sem a metus eleifend lobortis. Cras vulputate id ante sed vulputate. Pellentesque imperdiet tempus dapibus. Phasellus euismod imperdiet arcu, eu suscipit augue euismod ultrices';
-
+  const fullText = fulltext || 'No description available';
   return (
     <div key={id} className="mb-12 group bg-gray-100">
       <div className="m-auto max-w-xlg rounded overflow-hidden shadow-lg">
         <div className="px-6 py-4">
           <div className="font-bold text-xl mb-5 hover:text-blue-500">
-            <h1>{id}</h1>
             {title ? (
               <a target={url && '_blank'} href={url || '#'}>
                 {title}
@@ -37,15 +33,17 @@ const Story = ({ story }) => {
           </div>
           <p className="text-gray-800 text-base">
             {/* // TODO: fulltext */}
-            {seeMore ? fullText : fullText.substring(0, 200) + '...'}
-            <span
-              onClick={() => setSeeMore(!seeMore)}
-              className="text-blue-500 cursor-pointer"
-            >
-              {seeMore ? ' See less.' : ' See more.'}
-            </span>
+            {seeMore ? fullText : fullText.substring(0, 950) + '...'}
+            {fullText.length > 950 && (
+              <span
+                onClick={() => setSeeMore(!seeMore)}
+                className="text-blue-500 cursor-pointer"
+              >
+                {seeMore ? ' See less.' : ' See more.'}
+              </span>
+            )}
           </p>
-          <p className="my-5 text-gray-700 text-base">
+          <p className="text-gray-700 text-base">
             Source:&nbsp;&nbsp;
             {source ? (
               <a
@@ -59,7 +57,7 @@ const Story = ({ story }) => {
           </p>
         </div>
 
-        <div className="text-sm px-6 pt-4 pb-2">
+        <div className="text-sm px-6  pb-2">
           <p className="text-gray-900 leading-none">{author || 'Unknown'}</p>
           <p className="text-gray-600">
             {dayjs(created_at).fromNow() || 'Undefined'}
