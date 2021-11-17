@@ -5,25 +5,30 @@ import InfiniteScroll from 'react-infinite-scroll-component';
 
 const Stories = (props) => {
   const { user } = props;
-  const [storiesInPage, setStoriesInPage] = useState(15);
-  const [storyIndex, setStoryIndex] = useState(16);
+  const [storiesInPage, setStoriesInPage] = useState(10);
+  const [storyIndex, setStoryIndex] = useState(10);
   const [stories, setStories] = useState(props.stories);
   const [hasMore, setHasMore] = useState(true);
-  console.log(storyIndex);
 
   const getMoreStories = async () => {
     try {
       const { data } = await supabase
         .from('stories')
         .select('*')
-        .range(storyIndex, storyIndex + storiesInPage)
         .order('created_at', { ascending: false })
-        .limit(storiesInPage);
+        .range(storyIndex, storyIndex + storiesInPage - 1);
+      if (data.length === 0) {
+        setHasMore(false);
+      } else {
+        // makes sure they are sorted descendengly according to id
+        data.sort((a, b) => b.id - a.id);
 
-      setStories((oldStories) => [...oldStories, ...data]);
-      setStoryIndex((oldIndex) => oldIndex + storiesInPage + 1);
+        setStories((oldStories) => [...oldStories, ...data]);
+        setStoryIndex((oldIndex) => oldIndex + storiesInPage);
+      }
     } catch (err) {
       setHasMore(false);
+      console.log(err);
     }
   };
 
@@ -38,8 +43,16 @@ const Stories = (props) => {
               dataLength={stories.length}
               next={getMoreStories}
               hasMore={hasMore}
-              loader={<h3>Loading...</h3>}
-              endMessage={<h4>Nothing more to show.</h4>}
+              loader={
+                <div className="flex justify-center items-center overflow-hidden">
+                  <div className="animate-spin rounded-full h-20 w-20 border-b-2 border-gray-900"></div>
+                </div>
+              }
+              endMessage={
+                <h2 className="font-bold text-center">
+                  No more stories to be shown.
+                </h2>
+              }
             >
               {stories.map((story) => (
                 <Story key={story.id} story={story} />
@@ -66,7 +79,7 @@ export async function getServerSideProps({ req }) {
     .from('stories')
     .select('*')
     .order('created_at', { ascending: false })
-    .limit(15);
+    .range(0, 9);
 
   // If there is a user, return it.
   return { props: { user, stories: storiesResponse.data } };
