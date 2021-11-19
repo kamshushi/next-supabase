@@ -1,28 +1,28 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { supabase } from '../utils/supabaseClient';
 import Story from '../components/Story';
 import InfiniteScroll from 'react-infinite-scroll-component';
 import { useRouter } from 'next/dist/client/router';
+import { Auth } from '@supabase/ui';
 
 const Stories = (props) => {
-  const { user } = props;
   const router = useRouter();
-  console.log(user);
-  if (!user) {
-    router.push('/login');
-  }
+  const [currentUser, setCurrentUser] = useState(supabase.auth.user());
+
+  useEffect(() => {
+    if (!currentUser) {
+      router.push('/login');
+    }
+  }, [currentUser]);
   const [storiesInPage, setStoriesInPage] = useState(10);
   const [storyIndex, setStoryIndex] = useState(10);
-  const [stories, setStories] = useState(props.stories);
+  const [stories, setStories] = useState(
+    props.stories.sort((a, b) => b.id - a.id)
+  );
   const [hasMore, setHasMore] = useState(true);
 
   const getMoreStories = async () => {
     try {
-      // const { data } = await supabase
-      //   .from('stories')
-      //   .select('*')
-      //   .order('created_at', { ascending: false })
-      //   .range(storyIndex, storyIndex + storiesInPage - 1);
       const res = await fetch('/api/stories', {
         method: 'POST',
         headers: {
@@ -37,7 +37,6 @@ const Stories = (props) => {
         response: { data },
       } = await res.json();
 
-      console.log(data);
       if (data.length === 0) {
         setHasMore(false);
       } else {
@@ -53,8 +52,8 @@ const Stories = (props) => {
     }
   };
   const signOut = async () => {
-    await fetch('/api/signout');
-    // router.push('/login');
+    supabase.auth.signOut();
+    setCurrentUser(null);
   };
 
   return (
@@ -65,35 +64,51 @@ const Stories = (props) => {
             <h1 className="text-2xl mr-10 font-extrabold text-gray-900">
               Stories
             </h1>
-            <button
-              onClick={signOut}
-              className=" g-blue-500 bg-red-500 hover:bg-red-700 text-white font-bold py-2 px-4 rounded-full"
-            >
-              Sign Out
-            </button>
           </div>
-
-          <div className="mt-6 ">
-            <InfiniteScroll
-              dataLength={stories.length}
-              next={getMoreStories}
-              hasMore={hasMore}
-              loader={
-                <div className="flex justify-center items-center overflow-hidden">
-                  <div className="animate-spin rounded-full h-20 w-20 border-b-2 border-gray-900"></div>
-                </div>
-              }
-              endMessage={
-                <h2 className="font-bold text-center">
-                  No more stories to be shown.
-                </h2>
-              }
-            >
-              {stories.map((story) => (
-                <Story key={story.id} story={story} />
-              ))}
-            </InfiniteScroll>
-          </div>
+          {stories ? (
+            <div className="mt-6 ">
+              <InfiniteScroll
+                dataLength={stories.length || 0}
+                next={getMoreStories}
+                hasMore={hasMore}
+                loader={
+                  <div className="flex justify-center items-center overflow-hidden">
+                    <div className="animate-spin rounded-full h-20 w-20 border-b-2 border-gray-900"></div>
+                  </div>
+                }
+                endMessage={
+                  <h2 className="font-bold text-center">
+                    No more stories to be shown.
+                  </h2>
+                }
+              >
+                {stories.map((story) => (
+                  <Story key={story.id} story={story} />
+                ))}
+              </InfiniteScroll>
+              <button
+                onClick={signOut}
+                className="border-solid	border-2 p-3 hover:bg-red-500 hover:text-white border-gray-200 shadow-lg fixed right-0 bottom-0 bg-gray-200  m-8 rounded-full "
+              >
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  className="h-10 w-10 "
+                  viewBox="0 0 20 20"
+                  fill="currentColor"
+                >
+                  <path
+                    fillRule="evenodd"
+                    d="M3 3a1 1 0 00-1 1v12a1 1 0 102 0V4a1 1 0 00-1-1zm10.293 9.293a1 1 0 001.414 1.414l3-3a1 1 0 000-1.414l-3-3a1 1 0 10-1.414 1.414L14.586 9H7a1 1 0 100 2h7.586l-1.293 1.293z"
+                    clipRule="evenodd"
+                  />
+                </svg>
+              </button>
+            </div>
+          ) : (
+            <h2 className="font-bold text-center">
+              No more stories to be shown.
+            </h2>
+          )}
         </div>
       </div>
     </div>
@@ -103,19 +118,11 @@ const Stories = (props) => {
 export default Stories;
 
 export async function getServerSideProps({ req }) {
-  const response = await supabase.auth.api.getUserByCookie(req);
-  const { user } = response;
-  if (!user) {
-    // If no user, redirect to index.
-    return { props: {}, redirect: { destination: '/login', permanent: false } };
-  }
-
   const storiesResponse = await supabase
     .from('stories')
     .select('*')
     .order('created_at', { ascending: false })
     .limit(10);
 
-  // If there is a user, return it.
-  return { props: { user, stories: storiesResponse.data } };
+  return { props: { stories: storiesResponse.data } };
 }

@@ -1,22 +1,14 @@
 import Link from 'next/link';
-import useSWR from 'swr';
 import { Auth, Card, Typography, Space, Button, Icon } from '@supabase/ui';
 import { supabase } from '../../utils/supabaseClient';
 import { useEffect, useState } from 'react';
-
-const fetcher = (url, token) =>
-  fetch(url, {
-    method: 'GET',
-    headers: new Headers({ 'Content-Type': 'application/json', token }),
-    credentials: 'same-origin',
-  }).then((res) => res.json());
+import { useRouter } from 'next/router';
+import Image from 'next/image';
 
 const Index = () => {
   const { user, session } = Auth.useUser();
-  const { data, error } = useSWR(
-    session ? ['/api/getUser', session.access_token] : null,
-    fetcher
-  );
+  const router = useRouter();
+
   const [authView, setAuthView] = useState('sign_in');
 
   useEffect(() => {
@@ -27,7 +19,6 @@ const Index = () => {
           setTimeout(() => setAuthView('sign_in'), 1000);
 
         // Send session to /api/auth route to set the auth cookie.
-        // NOTE: this is only needed if you're doing SSR (getServerSideProps)!
         fetch('/api/auth', {
           method: 'POST',
           headers: new Headers({ 'Content-Type': 'application/json' }),
@@ -41,15 +32,22 @@ const Index = () => {
       authListener.unsubscribe();
     };
   }, []);
+  useEffect(() => {
+    if (user) {
+      router.push('/');
+    }
+  }, [user]);
 
   const View = () => {
     if (!user)
       return (
         <Space direction="vertical" size={8}>
           <div>
-            <img
+            <Image
               src="https://app.supabase.io/img/supabase-light.svg"
               width="96"
+              height="20"
+              alt="supabase icon"
             />
             <Typography.Title level={3} className="mt-7 mb-7 font-bold">
               Welcome to Supabase Auth
@@ -72,42 +70,9 @@ const Index = () => {
           <Auth.UpdatePassword supabaseClient={supabase} />
         )}
         {user && (
-          <>
-            <Typography.Text>You're signed in</Typography.Text>
-            <Typography.Text strong>Email: {user.email}</Typography.Text>
-
-            <Button
-              icon={<Icon type="LogOut" />}
-              type="outline"
-              onClick={() => supabase.auth.signOut()}
-            >
-              Log out
-            </Button>
-            {error && (
-              <Typography.Text type="danger">
-                Failed to fetch user!
-              </Typography.Text>
-            )}
-            {data && !error ? (
-              <>
-                <Typography.Text type="success">
-                  User data retrieved server-side (in API route):
-                </Typography.Text>
-
-                <Typography.Text>
-                  <pre>{JSON.stringify(data, null, 2)}</pre>
-                </Typography.Text>
-              </>
-            ) : (
-              <div>Loading...</div>
-            )}
-
-            <Typography.Text>
-              <Link href="/profile">
-                <a>SSR example with getServerSideProps</a>
-              </Link>
-            </Typography.Text>
-          </>
+          <div className="flex justify-center items-center overflow-hidden">
+            <div className="animate-spin rounded-full h-20 w-20 border-b-2 border-gray-900"></div>
+          </div>
         )}
       </Space>
     );

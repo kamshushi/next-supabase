@@ -24,7 +24,7 @@ const Story = ({ story }) => {
         <div className="px-6 py-4">
           <div className="font-bold text-xl mb-5 hover:text-blue-500">
             {title ? (
-              <a target={url && '_blank'} href={url || '#'}>
+              <a target={url && '_blank'} rel="noreferrer" href={url || '#'}>
                 {title}
               </a>
             ) : (
@@ -49,6 +49,7 @@ const Story = ({ story }) => {
               <a
                 className="underline text-blue-500 hover:text-blue-400"
                 target="_blank"
+                rel="noreferrer"
                 href={`https://${source}`}
               >{`${source}`}</a>
             ) : (
